@@ -1,0 +1,5 @@
+configdb = %(configdb)s
+dbpath = %(datadir)s
+bind_ip = %(ip)s
+port = %(port)s
+ipv6 = true

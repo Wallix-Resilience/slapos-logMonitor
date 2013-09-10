@@ -1,0 +1,11 @@
+--- src/mongo/s/config.cpp	2013-04-22 16:48:39.000000000 +0200
++++ src/mongo/s/config.cpp	2013-05-03 13:45:00.539144637 +0200
+@@ -987,7 +987,7 @@
+         if ( name.find( ":" ) != string::npos ) {
+             if ( withPort )
+                 return name;
+-            return name.substr( 0 , name.find( ":" ) );
++            return name.substr( 0 , name.find_last_of( ":" ) );
+         }
+ 
+         if ( withPort ) {

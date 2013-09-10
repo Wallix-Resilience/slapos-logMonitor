@@ -1,0 +1,6 @@
+--- EGG-INFO/requires.txt	2012-07-27 12:45:58.000000000 +0200
++++ EGG-INFO/requires2.txt	2012-07-27 12:57:35.000000000 +0200
+@@ -1 +1 @@
+-requests==0.12.1
+\ Pas de fin de ligne à la fin du fichier.
++requests==0.13.5

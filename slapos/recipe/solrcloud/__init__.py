@@ -1,0 +1,190 @@
+import shutil
+import os
+import signal
+from binascii import b2a_uu as uuencode
+import pkg_resources
+
+
+from slapos.recipe.librecipe import GenericBaseRecipe
+from slapos.recipe.librecipe import BaseSlapRecipe
+
+
+class Initserver(GenericBaseRecipe):
+    
+
+  def install(self):
+    path_list = []
+
+    # Copy application
+    cores_dest = os.path.join(self.options['cores-path'],"cores")
+    
+#    try:
+ #       shutil.rmtree(cores_dest)
+  #  except:
+   #     pass
+      
+    #shutil.rmtree(cores)
+    
+    cores_dir = pkg_resources.resource_filename(__name__,'cores')
+    
+    shutil.copytree(cores_dir,cores_dest)
+ 
+   # os.mkdir(self.options['cores-path'])
+
+    coresPath = '-Dsolr.solr.home=%s' % cores_dest
+    confdir = '-Dbootstrap_confdir=%s' % cores_dest
+    print confdir
+    confname = '-Dcollection.configName=myconf'
+    dz = '-DzkRun'
+    try:
+      numShard =  '%s' % self.options['num-shards']
+    except:
+      numSgard = ' '
+
+    jettyPath =  '-Djetty.home=%s' % self.options['solr-path'] 
+    jettyPort = '-Djetty.port=%s' % self.options['port']
+    jettyHost = '-Djetty.host=%s' % self.options['ip']
+    java = os.path.join(self.options['java_home'],'bin','java')
+
+    print coresPath
+   # print self.options['java_home']
+    wrapper = self.createPythonScript(self.options['path'],
+        'slapos.recipe.librecipe.execute.execute',[java,
+        jettyPath, confdir, coresPath, confname, jettyHost, jettyPort,   
+        '-jar',os.path.join(self.options['solr-path'],'start.jar') 
+        ]
+    )
+    
+    print wrapper
+    solr_config = dict(
+        cores = coresPath,
+        solr = self.options['solr-path']
+    )
+        
+    path_list.append(wrapper)
+
+    return path_list
+
+
+class Server(GenericBaseRecipe):
+
+  def install(self):
+    path_list = []
+
+    # Copy application                                                                                                            
+    cores_dest = os.path.join(self.options['cores-path'],"cores")
+
+    try:
+        shutil.rmtree(cores_dest)
+    except:
+        pass
+
+    coresPath = '-Dsolr.solr.home=%s' % cores_dest
+    jettyPath =  '-Djetty.home=%s' % self.options['solr-path']
+    jettyPort = '-Djetty.port=%s' % self.options['port']
+    jettyHost = '-Djetty.host=%s' % self.options['ip']
+    zkhost = '-DzkHost=%s' % self.options['zk']
+    java = os.path.join(self.options['java_home'],'bin','java')
+
+    # print self.options['java_home']                                                                                              
+    wrapper = self.createPythonScript(self.options['path'],
+        'slapos.recipe.librecipe.execute.execute',[java,
+        jettyPath, coresPath, jettyHost, jettyPort, zkHost,
+        '-jar',os.path.join(self.options['solr-path'],'start.jar')
+        ]
+    )
+
+    print wrapper
+    solr_config = dict(
+      cores = coresPath,
+        solr = self.options['solr-path']
+    )
+
+    path_list.append(wrapper)
+
+    return path_list
+
+class Solrzk(GenericBaseRecipe, BaseSlapRecipe):
+  def install(self):
+    path_list = []
+
+    cores_dest = os.path.join(self.options['cores-path'],"cores")
+    solr_home = os.path.join(self.options['cores-path'],"solrhome")
+
+    try:
+        shutil.rmtree(cores_dest)
+    except:
+        pass
+
+    try:
+      shutil.rmtree(solr_home)
+    except:
+      pass
+
+    cores_dir = pkg_resources.resource_filename(__name__,'cores')
+    shutil.copytree(cores_dir,cores_dest)
+
+    solrhome_dir = pkg_resources.resource_filename(__name__,'solr')
+    shutil.copytree(solrhome_dir, solr_home)
+    try:
+      numShard = '%s' % self.options['num-shards']
+    except:
+      numShard = '1'
+
+    zk = '-z %s' % self.options['zookeeper']
+    bootstrap = self.options['bootstrap']
+
+    cores = '-c %s' % cores_dest #conf
+    solrPath = '-s %s' % self.options['solr-path']
+    ip = '-i %s' % self.options['ip']
+    port = '-p %s' % self.options['port']
+    java = '-j %s' % os.path.join(self.options['java_home'],'bin','java')
+    solrh = '-m %s' % solr_home
+    numsh = '-n %s' % numShard
+    wrapper = self.createPythonScript(self.options['path'],
+        'slapos.recipe.librecipe.execute.execute',
+        [
+         bootstrap, zk, cores, solrPath, solrh, numsh, ip, port, java
+        ]
+    )
+
+    path_list.append(wrapper)
+
+    return path_list
+
+
+class SolrJoin(GenericBaseRecipe, BaseSlapRecipe):
+
+  def install(self):
+    path_list = []
+    
+    solr_home = os.path.join(self.options['cores-path'],"solrhome")
+
+    try:
+      shutil.rmtree(solr_home)
+    except:
+      pass
+
+    solrhome_dir = pkg_resources.resource_filename(__name__,'solr')
+    shutil.copytree(solrhome_dir, solr_home)
+    
+
+
+    bootstrap = self.options['bootstrap']
+    solrPath = '-s %s' % self.options['solr-path']
+    zk = '-z %s' % self.options['zookeeper']
+    ip = '-i %s' % self.options['ip']
+    port = '-p %s' % self.options['port']
+    java = '-j %s' % os.path.join(self.options['java_home'],'bin','java')
+    solrh = '-m %s' % solr_home
+    
+    wrapper = self.createPythonScript(self.options['path'],
+        'slapos.recipe.librecipe.execute.execute',
+        [
+          bootstrap, zk, solrh, solrPath, ip, port, java
+        ]
+    )
+
+    path_list.append(wrapper)
+
+    return path_list
